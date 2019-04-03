@@ -62,7 +62,8 @@ public class ZKDistributedLockTest {
         zkClient.createRecursive(lockPath, null, CreateMode.PERSISTENT);
         final AtomicInteger integer = new AtomicInteger(0);
         final List<String> msgList = new ArrayList<String>();
-        for(int i=0;i<20;i++){
+        int N=1;
+        for(int i=0;i<N;i++){
             Thread thread1 = new Thread(new Runnable() {
                 public void run() {
                     try {
@@ -103,16 +104,16 @@ public class ZKDistributedLockTest {
         }
 
         //等待事件到达
-        int size = TestUtil.waitUntil(20, new Callable<Integer>() {
+        int size = TestUtil.waitUntil(N, new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
                 return msgList.size();
             }
             
         }, TimeUnit.SECONDS, 100);
-        assertThat(size).isEqualTo(20);
+        assertThat(size).isEqualTo(N);
         boolean flag = true;
-        for(int i =0;i<20;i++){
+        for(int i =0;i<N;i++){
             if(!msgList.get(i).equals("thread "+(i+1))){
                 flag = false;
             }

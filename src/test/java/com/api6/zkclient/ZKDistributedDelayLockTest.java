@@ -59,12 +59,13 @@ public class ZKDistributedDelayLockTest {
      */
     @Test
     public void testDistributedDelayLock() throws Exception{
+        final int N=5;
         final String lockPach = "/zk/delylock1";
         final List<String> msgList = new ArrayList<String>();
-        final CountDownLatch latch = new CountDownLatch(5);
+        final CountDownLatch latch = new CountDownLatch(N);
         zkClient.createRecursive(lockPach, null, CreateMode.PERSISTENT);
         final AtomicInteger index = new AtomicInteger(0);
-        for(int i=0;i<5;i++){
+        for(int i=0;i<N;i++){
             
             Thread thread1 = new Thread(new Runnable() {
                 public void run() {
@@ -98,7 +99,7 @@ public class ZKDistributedDelayLockTest {
         
         
       //等待事件到达
-       int size = TestUtil.waitUntil(5, new Callable<Integer>() {
+       int size = TestUtil.waitUntil(N, new Callable<Integer>() {
             @Override
             public Integer call() throws Exception {
                 return msgList.size();
@@ -106,7 +107,7 @@ public class ZKDistributedDelayLockTest {
             
        }, TimeUnit.SECONDS, 100);
        
-      assertThat(size).isEqualTo(5);
+      assertThat(size).isEqualTo(N);
     }
     
  
