@@ -41,6 +41,7 @@ public class ZKDistributedLock implements ZKLock {
     private final ZKChildCountListener countListener;
     private final ZKClient client;
     private final String lockPath;
+    private String newPath;
     private String currentSeq;
     private Semaphore semaphore;
     private String lockNodeData;
@@ -56,9 +57,13 @@ public class ZKDistributedLock implements ZKLock {
             
             @Override
             public void handleChildCountChanged(String path, List<String> children) throws Exception {
+                System.out.println("handleChildCountChanged start..."+newPath);
                 if(check(currentSeq, children)){
+                    System.out.println("handleChildCountChanged semaphore release start..."+newPath);
                     semaphore.release();
+                    System.out.println("handleChildCountChanged semaphore release end..."+newPath);
                 }
+                System.out.println("handleChildCountChanged end..."+newPath);
             }
         };
     }
@@ -97,23 +102,26 @@ public class ZKDistributedLock implements ZKLock {
         //信号量为0，线程就会一直等待直到数据变成正数
         semaphore = new Semaphore(0);
         String newPath = client.create(lockPath+"/1", lockNodeData, CreateMode.EPHEMERAL_SEQUENTIAL);
+        this.newPath=newPath;
         String[] paths = newPath.split("/");
         currentSeq = paths[paths.length - 1];
         boolean getLock = false;
         try {
+            System.out.println("lock semaphore acquire start..."+newPath);
             if(timeout>0){
                 getLock = semaphore.tryAcquire(timeout, TimeUnit.MICROSECONDS);
             }else{
                 semaphore.acquire();
                 getLock = true;
             }
+            System.out.println("lock semaphore acquire end..."+newPath);
         } catch (InterruptedException e) {
             throw new ZKInterruptedException(e);
         }
         if (getLock) {
-            logger.debug("get lock successful.");
+            logger.debug("get lock successful."+newPath);
         } else {
-            logger.debug("failed to get lock.");
+            logger.debug("failed to get lock."+newPath);
         }
         return getLock;
     }
